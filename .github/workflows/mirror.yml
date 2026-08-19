@@ -1,0 +1,47 @@
+name: Mirror Deloitte GitHub to RWS GitHub
+
+on:
+  push:
+    branches:
+      - '**'
+
+  delete:
+
+  workflow_dispatch:
+
+jobs:
+  mirror-to-rws:
+    name: Mirror Repository to RWS
+    runs-on: ubuntu-latest
+
+    steps:
+
+      # 1. Checkout Deloitte repository
+      - name: Checkout Deloitte repository
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      # 2. Configure Git
+      - name: Configure Git
+        run: |
+          git config user.name "github-sync-bot"
+          git config user.email "github-sync-bot@users.noreply.github.com"
+
+      # 3. Configure RWS GitHub remote
+      - name: Configure RWS GitHub remote
+        env:
+          RWS_GITHUB_USERNAME: ${{ secrets.RWS_GITHUB_USERNAME }}
+          RWS_GITHUB_TOKEN: ${{ secrets.RWS_GITHUB_TOKEN }}
+        run: |
+          git remote add rws \
+            "https://github.com/azizih4ck/rws-mirror-test.git"
+
+          git config http.https://github.com/.extraheader \
+            "AUTHORIZATION: basic $(printf '%s:%s' "$RWS_GITHUB_USERNAME" "$RWS_GITHUB_TOKEN" | base64 -w 0)"
+
+      # 4. Mirror Deloitte repository to RWS
+      - name: Mirror repository
+        run: |
+          git push rws --mirror
