@@ -1,13 +1,13 @@
+#New version - with SHA verification
+
 name: Mirror Deloitte GitHub to RWS GitHub
 
 on:
   push:
     branches:
-      - '**'
+      - main
     tags:
       - '**'
-
-  delete:
 
   workflow_dispatch:
 
@@ -38,7 +38,7 @@ jobs:
           RWS_GITHUB_TOKEN: ${{ secrets.RWS_GITHUB_TOKEN }}
         run: |
           git remote add rws \
-            "https://github.com/azizih4ck/rws-ua-bff.git"
+            "https://github.com/azizih4ck/rws-mirror-test.git"
 
           git config http.https://github.com/.extraheader \
             "AUTHORIZATION: basic $(printf '%s:%s' "$RWS_GITHUB_USERNAME" "$RWS_GITHUB_TOKEN" | base64 -w 0)"
@@ -47,3 +47,21 @@ jobs:
       - name: Mirror repository
         run: |
           git push rws --mirror
+
+      # 5. Verify commit SHA match
+      - name: Verify commit SHA match
+        run: |
+          set -e
+
+          SOURCE_SHA=$(git rev-parse HEAD)
+          RWS_SHA=$(git ls-remote rws refs/heads/main | cut -f1)
+
+          echo "Source SHA: $SOURCE_SHA"
+          echo "RWS SHA:    $RWS_SHA"
+
+          if [ "$SOURCE_SHA" != "$RWS_SHA" ]; then
+            echo "::error::SHA mismatch — mirror failed verification"
+            exit 1
+          fi
+
+          echo "Verified: RWS main matches Deloitte main"
