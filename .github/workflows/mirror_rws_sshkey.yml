@@ -100,7 +100,7 @@ jobs:
 
           cd source-mirror
 
-          git remote add rws git@github.com:azizih4ck/rws-ua-aem.git
+          git remote add rws git@github.com:azizih4ck/rws-ua-bff.git
           git config core.sshCommand "ssh -i ~/.ssh/rws_deploy_key -o IdentitiesOnly=yes"
 
       - name: Mirror repository
