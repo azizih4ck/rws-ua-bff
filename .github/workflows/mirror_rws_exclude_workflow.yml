@@ -1,4 +1,4 @@
-#version11a-exclude-workflows - minimal diff from v11a
+# version11a-exclude-workflows - minimal diff from v11a
 # ONE new step added: "Exclude .github/workflows from main"
 # Everything else is unchanged from the original v11a.
 
