@@ -1,0 +1,39 @@
+1. Generate the SSH key pair
+
+On your own machine (Git Bash, matching your usual setup):
+
+ssh-keygen -t ed25519 -f rws-mirror-deploy-key -C "deloitte-mirror-bot" -N ""
+
+-t ed25519 — modern, secure key type
+-f rws-mirror-deploy-key — output filename (creates two files: rws-mirror-deploy-key and rws-mirror-deploy-key.pub)
+-N "" — no passphrase (required, since GitHub Actions can't type one in when it runs)
+
+This creates two files in your current folder:
+
+rws-mirror-deploy-key — the private key (secret, never share)
+rws-mirror-deploy-key.pub — the public key (safe to share, this is what you give to GitHub)
+
+2. Add the public key to RWS's repo
+Go to github.com/azizih4ck/rws-mirror-test (the RWS-side repo)
+Settings → Deploy keys → Add deploy key
+Title: something identifiable, e.g. deloitte-mirror-bot
+Key: open rws-mirror-deploy-key.pub in a text editor, copy its entire contents, paste it in
+Check "Allow write access" — this is unchecked by default; without it, the key can only read, and your mirror push will fail
+Save
+
+3. Add the private key as a secret in Deloitte's repo
+Go to your Deloitte repo (fish5511's side) → Settings → Secrets and variables → Actions
+New repository secret
+Name: RWS_DEPLOY_KEY
+Value: open rws-mirror-deploy-key (the private one, no .pub) in a text editor, copy its entire contents including the -----BEGIN...----- and -----END...----- lines, paste it in
+Save
+
+4. Delete the local key files once both are uploaded
+bash
+rm rws-mirror-deploy-key rws-mirror-deploy-key.pub
+
+No reason to keep copies lying around on your laptop once GitHub has both halves.
+
+5. Run the v10 workflow
+
+Nothing else to configure — the Set up SSH for RWS remote step in v10 reads secrets.RWS_DEPLOY_KEY automatically and wires it up. Trigger it via workflow_dispatch first to test.
