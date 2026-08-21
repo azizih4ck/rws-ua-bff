@@ -1,0 +1,32 @@
+1. Decide who creates the App — RWS or Deloitte
+
+Since the App needs to be installed on RWS's repos, it should be registered under whichever org actually owns/administers those repos on GitHub — almost certainly RWS's org, not Deloitte's. This is worth confirming on your call with Geric, since creating a GitHub App requires org owner/admin rights.
+
+2. Register the GitHub App
+Go to (as an RWS org admin, or with them present): RWS org → Settings → Developer settings → GitHub Apps → New GitHub App
+Fill in:
+GitHub App name: something clear, e.g. deloitte-rws-mirror-bot
+Homepage URL: can be anything valid, e.g. your Deloitte repo URL — not functionally important here
+Webhook: uncheck "Active" — you don't need webhooks for this use case (that's Option B), only the auth mechanism
+Repository permissions → set:
+Contents: Read and write
+Metadata: Read-only (auto-required)
+Where can this GitHub App be installed? → "Only on this account" (RWS's org)
+Click Create GitHub App
+
+3. Generate the App's private key
+On the App's settings page (you'll land here after creation) → scroll to Private keys → Generate a private key
+This downloads a .pem file — this is the App's credential, treat it like the deploy key private half
+Note the App ID shown near the top of the same page — you'll need both
+
+4. Install the App on the target repo(s)
+Same App settings page → Install App (left sidebar)
+Choose RWS's org → Only select repositories → pick rws-mirror-test (and later, the real AEM/BFF/Mobile repos)
+Confirm install
+
+5. Store the two credentials in Deloitte's repo secrets
+
+In your Deloitte repo → Settings → Secrets and variables → Actions:
+
+RWS_APP_ID — the App ID from step 3
+RWS_APP_PRIVATE_KEY — paste the entire contents of the .pem file
