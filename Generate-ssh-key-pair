@@ -4,6 +4,25 @@ On your own machine (Git Bash, matching your usual setup):
 
 ssh-keygen -t ed25519 -f rws-mirror-deploy-key -C "deloitte-mirror-bot" -N ""
 
+=======
+ssh-keygen -t ed25519 -f rws-aem-deploy-key -C "deloitte-mirror-aem" -N ""
+ssh-keygen -t ed25519 -f rws-bff-deploy-key -C "deloitte-mirror-bff" -N ""
+ssh-keygen -t ed25519 -f rws-mobile-deploy-key -C "deloitte-mirror-mobile" -N ""
+
+On RWS's side — add each public key to its matching repo's Deploy Keys settings (with write access):
+
+rws-aem-deploy-key.pub → AEM repo
+rws-bff-deploy-key.pub → BFF repo
+rws-mobile-deploy-key.pub → Mobile repo
+
+On Deloitte's side — each private key goes into its own repo's secrets (since each pipeline lives in its own Deloitte repo per your earlier design):
+
+AEM repo secret: RWS_DEPLOY_KEY
+BFF repo secret: RWS_DEPLOY_KEY
+Mobile repo secret: RWS_DEPLOY_KEY
+
+============
+
 -t ed25519 — modern, secure key type
 -f rws-mirror-deploy-key — output filename (creates two files: rws-mirror-deploy-key and rws-mirror-deploy-key.pub)
 -N "" — no passphrase (required, since GitHub Actions can't type one in when it runs)
