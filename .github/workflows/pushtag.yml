@@ -38,7 +38,7 @@ jobs:
             "ssh -i ~/.ssh/rws_deploy_key -o IdentitiesOnly=yes"
 
           git remote add rws \
-            git@github.com:rws_test/rws-mirror-test.git
+            git@github.com:azizih4ck/rws-ua-bff.git
 
       - name: Push tag to RWS
         run: |
