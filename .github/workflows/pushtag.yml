@@ -6,6 +6,11 @@ on:
       - '*'
 
   workflow_dispatch:
+    inputs:
+      tag_name:
+        description: 'Tag to mirror (leave blank if running automatically on a tag push)'
+        required: false
+        default: ''
 
 jobs:
   push-tag-to-rws:
@@ -41,10 +46,16 @@ jobs:
             git@github.com:azizih4ck/rws-ua-bff.git
 
       - name: Push tag to RWS
+        env:
+          # Uses the manual input tag if provided; otherwise falls back to the event context tag name
+          TAG_NAME: ${{ github.event.inputs.tag_name || github.ref_name }}
         run: |
           set -e
 
-          TAG_NAME="${GITHUB_REF#refs/tags/}"
+          if [ -z "$TAG_NAME" ]; then
+            echo "::error::Tag name could not be determined."
+            exit 1
+          fi
 
           echo "========================================"
           echo "Deloitte → RWS Tag Synchronization"
@@ -53,16 +64,24 @@ jobs:
           echo "Tag        : $TAG_NAME"
           echo "========================================"
 
+          # Fetch the specific tag locally to ensure it is present if triggered manually from a branch
+          git fetch origin refs/tags/${TAG_NAME}:refs/tags/${TAG_NAME} --tags || true
+
           git push rws \
             "refs/tags/${TAG_NAME}:refs/tags/${TAG_NAME}"
 
           echo "Tag $TAG_NAME successfully pushed to RWS."
 
       - name: Verify RWS tag
+        env:
+          TAG_NAME: ${{ github.event.inputs.tag_name || github.ref_name }}
         run: |
           set -e
 
-          TAG_NAME="${GITHUB_REF#refs/tags/}"
+          if [ -z "$TAG_NAME" ]; then
+            echo "::error::Tag name missing for verification."
+            exit 1
+          fi
 
           SOURCE_SHA=$(git rev-list -n 1 "$TAG_NAME")
 
