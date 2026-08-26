@@ -1,0 +1,86 @@
+name: Mirror Deloitte GitHub Tag to RWS GitHub
+
+on:
+  push:
+    tags:
+      - '*'
+
+  workflow_dispatch:
+
+jobs:
+  push-tag-to-rws:
+
+    name: Push Tag to RWS
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Checkout Deloitte repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Configure SSH for RWS
+        env:
+          RWS_DEPLOY_KEY: ${{ secrets.RWS_DEPLOY_KEY }}
+        run: |
+          set -e
+
+          mkdir -p ~/.ssh
+
+          echo "$RWS_DEPLOY_KEY" > ~/.ssh/rws_deploy_key
+          chmod 600 ~/.ssh/rws_deploy_key
+
+          ssh-keyscan -H github.com >> ~/.ssh/known_hosts
+
+          git config core.sshCommand \
+            "ssh -i ~/.ssh/rws_deploy_key -o IdentitiesOnly=yes"
+
+          git remote add rws \
+            git@github.com:rws_test/rws-mirror-test.git
+
+      - name: Push tag to RWS
+        run: |
+          set -e
+
+          TAG_NAME="${GITHUB_REF#refs/tags/}"
+
+          echo "========================================"
+          echo "Deloitte → RWS Tag Synchronization"
+          echo "========================================"
+          echo "Repository : ${{ github.repository }}"
+          echo "Tag        : $TAG_NAME"
+          echo "========================================"
+
+          git push rws \
+            "refs/tags/${TAG_NAME}:refs/tags/${TAG_NAME}"
+
+          echo "Tag $TAG_NAME successfully pushed to RWS."
+
+      - name: Verify RWS tag
+        run: |
+          set -e
+
+          TAG_NAME="${GITHUB_REF#refs/tags/}"
+
+          SOURCE_SHA=$(git rev-list -n 1 "$TAG_NAME")
+
+          RWS_SHA=$(git ls-remote \
+            rws \
+            "refs/tags/${TAG_NAME}" | cut -f1)
+
+          echo "========================================"
+          echo "Tag Verification"
+          echo "========================================"
+          echo "Tag          : $TAG_NAME"
+          echo "Deloitte SHA : $SOURCE_SHA"
+          echo "RWS SHA      : $RWS_SHA"
+          echo "========================================"
+
+          if [ "$SOURCE_SHA" != "$RWS_SHA" ]; then
+            echo "::error::RWS tag SHA does not match Deloitte tag SHA."
+            exit 1
+          fi
+
+          echo "Verification successful."
